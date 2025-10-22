@@ -3,7 +3,7 @@ This file contains various activation functions and some of their derivatives us
 """
 
 # Import libraries
-import numpy as np
+import autograd.numpy as np
 
 # ReLU function
 def ReLU(z):
