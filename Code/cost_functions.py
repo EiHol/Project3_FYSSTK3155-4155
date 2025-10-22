@@ -3,7 +3,7 @@ This file contains various cost functions and some of their derivatives used in 
 """
 
 # Import libraries
-import numpy as np
+import autograd.numpy as np
 
 # Mean squared error function
 def mse(predict, target):
