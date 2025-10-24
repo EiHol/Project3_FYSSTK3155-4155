@@ -21,6 +21,18 @@ def mse_L1(predict, target, lmbda):
 def mse_L2(predict, target, lmbda):
     pass
 
+# Binary cross entropy
+def binary_cross_entropy():
+    pass
+
+# Binary cross entropy with L1 norm
+def BCE_L1():
+    pass
+
+# Binary cross entropy with L2 norm
+def BCE_L2():
+    pass
+
 # Cross entropy function
 def cross_entropy(predict, target):
     return np.sum(-target * np.log(predict))
