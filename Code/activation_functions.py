@@ -15,7 +15,7 @@ def ReLU_der(z):
 
 # Leaky ReLU function
 def leaky_ReLU(z, a):
-    return np.where(z > 0, z, z * a)
+    return np.where(z > 0, z, z * a) # comment
 
 # Derivative of the leaky ReLU function?
 def leaky_ReLU_der(z, a):
