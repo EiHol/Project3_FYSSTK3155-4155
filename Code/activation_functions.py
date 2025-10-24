@@ -13,13 +13,16 @@ def ReLU(z):
 def ReLU_der(z):
     return np.where(z > 0, 1, 0)
 
-# Leaky ReLU function
+# Leaky ReLU function?
 def leaky_ReLU(z, a):
-    return np.where(z > 0, z, z * a) # comment
+    return np.where(z > 0, z, z * a)
 
 # Derivative of the leaky ReLU function?
 def leaky_ReLU_der(z, a):
     return np.where(z > 0, 1, a)
+
+def linear(z):
+    return z
 
 # Sigmooid function
 def sigmoid(z):

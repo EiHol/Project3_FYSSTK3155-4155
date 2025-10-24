@@ -67,16 +67,16 @@ class NeuralNetwork:
         """Creates gradient function using autograd for automatic differentiation"""
         from autograd import grad
         
-        def cost(inputs, layers, activation_funcs, targets):
+        def cost(self, inputs, targets):
             # Forward pass through network
             a = inputs
-            for (W, b), activation_func in zip(layers, activation_funcs):
+            for (W, b), activation_func in zip(self.layers, self.activation_funcs):
                 z = a @ W + b
                 a = activation_func(z)
             # Return cost function value
             return self.cost_func(a, targets)
         
-        # Create gradient function with respect to layers (argument 1)
+        # Create gradient function with respect to layers
         gradient_func = grad(cost, 1)
         return gradient_func
 
