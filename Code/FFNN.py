@@ -67,23 +67,23 @@ class NeuralNetwork:
         """Creates gradient function using autograd for automatic differentiation"""
         from autograd import grad
         
-        def cost(self, inputs, targets):
+        def cost(layers, inputs, targets):
             # Forward pass through network
             a = inputs
-            for (W, b), activation_func in zip(self.layers, self.activation_funcs):
+            for (W, b), activation_func in zip(layers, self.activation_funcs):
                 z = a @ W + b
                 a = activation_func(z)
             # Return cost function value
             return self.cost_func(a, targets)
         
         # Create gradient function with respect to layers
-        gradient_func = grad(cost, 1)
+        gradient_func = grad(cost, 0)
         return gradient_func
 
 
     def compute_gradients(self, inputs, targets):
         """Computes the gradients for each layer and returns all gradients"""
-        layers_grad = self.gradient_func(inputs, self.layers, self.activation_funcs, targets)
+        layers_grad = self.gradient_func(self.layers, inputs, targets)
         return layers_grad
 
 
@@ -100,12 +100,16 @@ class NeuralNetwork:
 
     def update_weights_momentum(self, layers_grad, eta=0.001, alpha=0.9):
         """Gradient descent with momentum for updating weights and biases"""
-        # Initialize velocities to 0 on first call
+        # Initialize velocities to 0 if velocities dont exist yet
         if self.velocities is None:
+            # List to store velocities
             self.velocities = []
             for W, b in self.layers:
+                # Set weight velocities to 0
                 W_v = np.zeros_like(W)
+                # Set bias velocities to 0
                 b_v = np.zeros_like(b)
+                # Append velicities to the list
                 self.velocities.append((W_v, b_v))
 
         # For each weight and bias, and their corresponding gradient and velocity
@@ -123,30 +127,6 @@ class NeuralNetwork:
             self.layers[indx] = (W_n, b_n)
             self.velocities[indx] = (W_v, b_v)
 
-        
-    def update_weights_stochastic_momentum(self, layers_grad, eta=0.001, alpha=0.9):
-        """Stochastic gradient descent with momentum for updating weights and biases"""
-        # Initialize velocities to 0 on first call
-        if self.velocities is None:
-            self.velocities = []
-            for W, b in self.layers:
-                W_v = np.zeros_like(W)
-                b_v = np.zeros_like(b)
-                self.velocities.append((W_v, b_v))
-
-        # For each weight and bias, and their corresponding gradient and velocity
-        for indx, ((W, b), (W_g, b_g), (W_v, b_v)) in enumerate(zip(self.layers, layers_grad, self.velocities)):
-            # Compute the velocity of the weight and bias
-            W_v = alpha * W_v - eta * W_g
-            b_v = alpha * b_v - eta * b_g
-
-            # Compute the new weight and bias values
-            W_n = W + W_v
-            b_n = b + b_v
-            
-            # Update weight, bias, and velocity of the current layer
-            self.layers[indx] = (W_n, b_n)
-            self.velocities[indx] = (W_v, b_v)
 
 
 def train_network(neural_network, inputs, targets, eta=0.01, epochs=100):
@@ -193,7 +173,7 @@ def train_network_stochastic_momentum(neural_network, inputs, targets, eta=0.01,
             # Compute gradients for the batch
             layers_grad = neural_network.compute_gradients(batch_inputs, batch_targets)
             # Update weights using stochastic momentum
-            neural_network.update_weights_stochastic_momentum(layers_grad, eta, alpha)
+            neural_network.update_weights_momentum(layers_grad, eta, alpha)
     
     # Return final trained layers
     return neural_network.layers
