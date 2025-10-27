@@ -65,6 +65,7 @@ notebook==7.4.5
 notebook_shim==0.2.4
 numpy==2.3.2
 packaging==25.0
+pandas==2.3.3
 pandoc==2.4
 pandocfilters==1.5.1
 parso==0.8.5
