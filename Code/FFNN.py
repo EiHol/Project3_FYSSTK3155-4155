@@ -231,9 +231,6 @@ def train_network(neural_network, inputs, targets, eta=0.01, epochs=100):
         layers_grad = neural_network.compute_gradients(inputs, targets)
         # Update weights using gradient descent
         neural_network.update_params(layers_grad, eta)
-    
-    # Return final trained layers
-    return neural_network.layers
 
 
 def train_network_momentum(neural_network, inputs, targets, eta=0.01, alpha=0.9, epochs=100):
@@ -244,9 +241,6 @@ def train_network_momentum(neural_network, inputs, targets, eta=0.01, alpha=0.9,
         layers_grad = neural_network.compute_gradients(inputs, targets)
         # Update weights using momentum
         neural_network.update_params_momentum(layers_grad, eta, alpha)
-    
-    # Return final trained layers
-    return neural_network.layers
 
 
 def train_network_stochastic_momentum(neural_network, inputs, targets, eta=0.01, alpha=0.9, epochs=100, batch_size=25):
@@ -268,9 +262,6 @@ def train_network_stochastic_momentum(neural_network, inputs, targets, eta=0.01,
             layers_grad = neural_network.compute_gradients(batch_inputs, batch_targets)
             # Update weights using stochastic momentum
             neural_network.update_params_momentum(layers_grad, eta, alpha)
-    
-    # Return final trained layers
-    return neural_network.layers
 
 
 def train_network_SRMSprop(neural_network, inputs, targets, eta=0.01, decay=0.9, epochs=100, batch_size=25):
@@ -292,9 +283,7 @@ def train_network_SRMSprop(neural_network, inputs, targets, eta=0.01, decay=0.9,
             layers_grad = neural_network.compute_gradients(batch_inputs, batch_targets)
             # Update weights using gradient descent
             neural_network.update_params_RMSprop(layers_grad, eta, decay)
-    
-    # Return final trained layers
-    return neural_network.layers
+
 
 def train_network_stocastic_ADAM(neural_network, inputs, targets, eta=0.01, beta1=0.9, beta2=0.999, epochs=100, batch_size=25):
     """Trains the network using ADAM"""
@@ -316,5 +305,3 @@ def train_network_stocastic_ADAM(neural_network, inputs, targets, eta=0.01, beta
             # Update weights using gradient descent
             neural_network.update_params_ADAM(layers_grad, eta, beta1, beta2)
     
-    # Return final trained layers
-    return neural_network.layers
