@@ -88,7 +88,7 @@ class NeuralNetwork:
         return layers_grad
 
 
-    def update_weights(self, layers_grad, eta=0.001):
+    def update_params(self, layers_grad, eta=0.001):
         """Standard gradient descent for updating weights and biases"""
         # Iterate through layers and their gradients
         for j, ((W, b), (W_g, b_g)) in enumerate(zip(self.layers, layers_grad)):
@@ -99,7 +99,7 @@ class NeuralNetwork:
             self.layers[j] = (W, b)
 
 
-    def update_weights_momentum(self, layers_grad, eta=0.001, alpha=0.9):
+    def update_params_momentum(self, layers_grad, eta=0.001, alpha=0.9):
         """Gradient descent with momentum for updating weights and biases"""
         # Initialize velocities to 0 if velocities dont exist yet
         if self.velocities is None:
@@ -129,7 +129,7 @@ class NeuralNetwork:
             self.velocities[indx] = (W_v, b_v)
 
     
-    def update_params_RMSprop(self, layers_grad, eta=0.001, decay=0.9, epsylon=0.001):
+    def update_params_RMSprop(self, layers_grad, eta=0.001, decay=0.9, epsilon=0.001):
         """Root mean squared propogation implementation"""
 
         # Initialize the moving average to 0 if it doesnt exist yet
@@ -148,12 +148,12 @@ class NeuralNetwork:
         for j, ((W, b), (W_g, b_g), (W_a, b_a)) in enumerate(zip(self.layers, layers_grad, self.moving_avg)):
 
             # Update the moving average
-            W_a = decay * W_a + ((1 - decay) * W_g)
-            b_a = decay * b_a + ((1 - decay) * b_g) 
+            W_a = decay * W_a + ((1 - decay) * W_g**2)
+            b_a = decay * b_a + ((1 - decay) * b_g**2) 
 
             # Update weights and biases using gradient descent
-            W -= (W_g * eta) / np.sqrt(W_a + epsylon)
-            b -= (b_g * eta) / np.sqrt(b_a + epsylon)
+            W -= (W_g * eta) / np.sqrt(W_a + epsilon)
+            b -= (b_g * eta) / np.sqrt(b_a + epsilon)
 
             # Store updates
             self.layers[j] = (W, b)
@@ -168,7 +168,7 @@ def train_network(neural_network, inputs, targets, eta=0.01, epochs=100):
         # Compute gradients for all layers
         layers_grad = neural_network.compute_gradients(inputs, targets)
         # Update weights using gradient descent
-        neural_network.update_weights(layers_grad, eta)
+        neural_network.update_params(layers_grad, eta)
     
     # Return final trained layers
     return neural_network.layers
@@ -181,7 +181,7 @@ def train_network_momentum(neural_network, inputs, targets, eta=0.01, alpha=0.9,
         # Compute gradients for all layers
         layers_grad = neural_network.compute_gradients(inputs, targets)
         # Update weights using momentum
-        neural_network.update_weights_momentum(layers_grad, eta, alpha)
+        neural_network.update_params_momentum(layers_grad, eta, alpha)
     
     # Return final trained layers
     return neural_network.layers
@@ -205,7 +205,31 @@ def train_network_stochastic_momentum(neural_network, inputs, targets, eta=0.01,
             # Compute gradients for the batch
             layers_grad = neural_network.compute_gradients(batch_inputs, batch_targets)
             # Update weights using stochastic momentum
-            neural_network.update_weights_momentum(layers_grad, eta, alpha)
+            neural_network.update_params_momentum(layers_grad, eta, alpha)
+    
+    # Return final trained layers
+    return neural_network.layers
+
+
+def train_network_SRMSprop(neural_network, inputs, targets, eta=0.01, decay=0.9, epochs=100, batch_size=25):
+    """Trains the neural network using standard gradient descent"""
+    # Iterate through epochs
+    for i in range(epochs):
+        # Randomly shuffle the data
+        p = np.random.permutation(len(inputs))
+        shuffled_inputs = inputs[p]
+        shuffled_targets = targets[p]
+
+        # Iterate through mini-batches
+        for j in range(0, len(inputs), batch_size):
+            # Extract current batch
+            batch_inputs = shuffled_inputs[j : j + batch_size]
+            batch_targets = shuffled_targets[j : j + batch_size]
+
+            # Compute gradients for all layers
+            layers_grad = neural_network.compute_gradients(inputs, targets)
+            # Update weights using gradient descent
+            neural_network.update_params_RMSprop(layers_grad, eta, decay)
     
     # Return final trained layers
     return neural_network.layers
