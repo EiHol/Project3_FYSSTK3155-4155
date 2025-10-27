@@ -129,7 +129,7 @@ class NeuralNetwork:
             self.velocities[indx] = (W_v, b_v)
 
     
-    def update_params_RMSprop(self, layers_grad, eta=0.001, decay=0.9, epsilon=0.001):
+    def update_params_RMSprop(self, layers_grad, eta=0.001, decay=0.9, epsilon=1e-8):
         """Root mean squared propogation implementation"""
 
         # Initialize the moving average to 0 if it doesnt exist yet
@@ -158,6 +158,68 @@ class NeuralNetwork:
             # Store updates
             self.layers[j] = (W, b)
             self.moving_avg[j] = (W_a, b_a)
+
+
+    def update_params_ADAM(self, layers_grad, eta=0.001, beta1=0.9, beta2=0.999, epsilon=1e-8):
+        """ADAM optimizer implementation"""
+
+        # Initialize time step if it doesn't exist
+        if not hasattr(self, "timestep"):
+            self.timestep = 0
+        
+        # Increment time step
+        self.timestep += 1
+
+        # Initialize the moving average to 0 if it doesnt exist yet
+        if self.moving_avg is None:
+            # List to store velocities
+            self.moving_avg = []
+            for W, b in self.layers:
+                # Set weight velocities to 0
+                W_a = np.zeros_like(W)
+                # Set bias velocities to 0
+                b_a = np.zeros_like(b)
+                # Append velicities to the list
+                self.moving_avg.append((W_a, b_a))
+
+        # Initialize velocities to 0 if velocities dont exist yet
+        if self.velocities is None:
+            # List to store velocities
+            self.velocities = []
+            for W, b in self.layers:
+                # Set weight velocities to 0
+                W_v = np.zeros_like(W)
+                # Set bias velocities to 0
+                b_v = np.zeros_like(b)
+                # Append velicities to the list
+                self.velocities.append((W_v, b_v))
+
+        # Iterate through layers and their gradients
+        for j, ((W, b), (W_g, b_g), (W_v, b_v), (W_a, b_a)) in enumerate(zip(self.layers, layers_grad, self.velocities, self.moving_avg)):
+
+            # Compute the velocity
+            W_v = beta1 * W_v + ((1 - beta1) * W_g)
+            b_v = beta1 * b_v + ((1 - beta1) * b_g)
+
+            # Compute the moving average
+            W_a = beta2 * W_a + ((1 - beta2) * W_g**2)
+            b_a = beta2 * b_a + ((1 - beta2) * b_g**2) 
+
+            # Computing the bias-corrected estimates
+            W_v_hat = W_v / (1 - beta1**self.timestep)
+            b_v_hat = b_v / (1 - beta1**self.timestep)
+            W_a_hat = W_a / (1 - beta2**self.timestep)
+            b_a_hat = b_a / (1 - beta2**self.timestep)
+
+            # Update weights and biases using gradient descent
+            W -= (W_v_hat * eta) / np.sqrt(W_a_hat + epsilon)
+            b -= (b_v_hat * eta) / np.sqrt(b_a_hat + epsilon)
+
+            # Store updates
+            self.layers[j] = (W, b)
+            self.velocities[j] = (W_v, b_v)
+            self.moving_avg[j] = (W_a, b_a)
+
 
 
 
@@ -230,6 +292,29 @@ def train_network_SRMSprop(neural_network, inputs, targets, eta=0.01, decay=0.9,
             layers_grad = neural_network.compute_gradients(batch_inputs, batch_targets)
             # Update weights using gradient descent
             neural_network.update_params_RMSprop(layers_grad, eta, decay)
+    
+    # Return final trained layers
+    return neural_network.layers
+
+def train_network_stocastic_ADAM(neural_network, inputs, targets, eta=0.01, beta1=0.9, beta2=0.999, epochs=100, batch_size=25):
+    """Trains the network using ADAM"""
+    # Iterate through epochs
+    for i in range(epochs):
+        # Randomly shuffle the data
+        p = np.random.permutation(len(inputs))
+        shuffled_inputs = inputs[p]
+        shuffled_targets = targets[p]
+
+        # Iterate through mini-batches
+        for j in range(0, len(inputs), batch_size):
+            # Extract current batch
+            batch_inputs = shuffled_inputs[j : j + batch_size]
+            batch_targets = shuffled_targets[j : j + batch_size]
+
+            # Compute gradients for all layers
+            layers_grad = neural_network.compute_gradients(batch_inputs, batch_targets)
+            # Update weights using gradient descent
+            neural_network.update_params_ADAM(layers_grad, eta, beta1, beta2)
     
     # Return final trained layers
     return neural_network.layers
