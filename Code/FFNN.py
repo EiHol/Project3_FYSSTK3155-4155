@@ -227,7 +227,7 @@ def train_network_SRMSprop(neural_network, inputs, targets, eta=0.01, decay=0.9,
             batch_targets = shuffled_targets[j : j + batch_size]
 
             # Compute gradients for all layers
-            layers_grad = neural_network.compute_gradients(inputs, targets)
+            layers_grad = neural_network.compute_gradients(batch_inputs, batch_targets)
             # Update weights using gradient descent
             neural_network.update_params_RMSprop(layers_grad, eta, decay)
     
