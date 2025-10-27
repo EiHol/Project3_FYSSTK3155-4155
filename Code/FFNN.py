@@ -20,6 +20,7 @@ class NeuralNetwork:
         self.layers = self._create_layers()
         self.gradient_func = self._create_gradient_func()
         self.velocities = None
+        self.moving_avg = None
 
     
     def _create_layers(self):
@@ -126,6 +127,37 @@ class NeuralNetwork:
             # Update weight, bias, and velocity of the current layer
             self.layers[indx] = (W_n, b_n)
             self.velocities[indx] = (W_v, b_v)
+
+    
+    def update_params_RMSprop(self, layers_grad, eta=0.001, decay=0.9, epsylon=0.001):
+        """Root mean squared propogation implementation"""
+
+        # Initialize the moving average to 0 if it doesnt exist yet
+        if self.moving_avg is None:
+            # List to store velocities
+            self.moving_avg = []
+            for W, b in self.layers:
+                # Set weight velocities to 0
+                W_a = np.zeros_like(W)
+                # Set bias velocities to 0
+                b_a = np.zeros_like(b)
+                # Append velicities to the list
+                self.moving_avg.append((W_a, b_a))
+
+        # Iterate through layers and their gradients
+        for j, ((W, b), (W_g, b_g), (W_a, b_a)) in enumerate(zip(self.layers, layers_grad, self.moving_avg)):
+
+            # Update the moving average
+            W_a = decay * W_a + ((1 - decay) * W_g)
+            b_a = decay * b_a + ((1 - decay) * b_g) 
+
+            # Update weights and biases using gradient descent
+            W -= (W_g * eta) / np.sqrt(W_a + epsylon)
+            b -= (b_g * eta) / np.sqrt(b_a + epsylon)
+
+            # Store updates
+            self.layers[j] = (W, b)
+            self.moving_avg[j] = (W_a, b_a)
 
 
 
