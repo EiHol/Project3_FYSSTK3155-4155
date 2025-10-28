@@ -53,12 +53,13 @@ class NeuralNetwork:
         # Return the list of weights and biases for each layer
         return layers
 
-    def batch_norm_forward(self, z, gamma, beta, eps=1e-5, momentum=0.9, training=True, running_mean=None, running_var=None):
+    def batch_norm_forward(self, z, gamma, beta, epsilon=1e-5, momentum=0.9, training=True, running_mean=None, running_var=None):
         # Uses all mini-batches and current mean and variance
         if training:
             batch_mean = np.mean(z, axis=0, keepdims=True)
             batch_var = np.var(z, axis=0, keepdims=True)
-            z_norm = (z - batch_mean) / np.sqrt(batch_var + eps)
+            # Eps is to avoid dividing ny zero
+            z_norm = (z - batch_mean) / np.sqrt(batch_var + epsilon)
             out = gamma * z_norm + beta
 
             # Update running statistics
@@ -69,7 +70,7 @@ class NeuralNetwork:
         # Uses running average
         else:
             # Use running statistics for inference
-            z_norm = (z - running_mean) / np.sqrt(running_var + eps)
+            z_norm = (z - running_mean) / np.sqrt(running_var + epsilon)
             out = gamma * z_norm + beta
 
         return out
