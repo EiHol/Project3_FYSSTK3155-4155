@@ -77,39 +77,36 @@ class NeuralNetwork:
 
 
     def predict(self, inputs):
-    """Performs forward propagation through the network to compute predictions"""
+        """Performs forward propagation through the network to compute predictions"""
+        # Set a equal to the initial input value
+        a = inputs
 
-    # Set a equal to the initial input value
-    a = inputs
+        # Iterate through layers and their respective activation functions to compute the prediction a
+        for layer, activation_func in zip(self.layers, self.activation_funcs):
+            # If we only have W and b as parameters, we compute z using only W and b
+            if len(layer) == 2:
+                # Layer without batch normalization
+                W, b = layer
+                z = a @ W + b
+            # Else we have batch normalization
+            else:
+                # Layer with batch normalization parameters
+                W, b, gamma, beta, running_mean, running_var = layer
+                z = a @ W + b
 
-    # Iterate through layers and their respective activation functions to compute the prediction a
-    for layer, activation_func in zip(self.layers, self.activation_funcs):
-        # If we only have W and b as parameters, we compute z using only W and b
-        if len(layer) == 2:
-            # Layer without batch normalization
-            W, b = layer
-            z = a @ W + b
-        # Else we have batch normalization
-        else:
-            # Layer with batch normalization parameters
-            W, b, gamma, beta, running_mean, running_var = layer
-            z = a @ W + b
+                # Apply Batch Normalization if present
+                z = self.batch_norm_forward(z,gamma,
+                    beta,
+                    running_mean=running_mean,
+                    running_var=running_var,
+                    training=training
+                )
 
-            # Apply Batch Normalization if present
-            z = self.batch_norm_forward(
-                z,
-                gamma,
-                beta,
-                running_mean=running_mean,
-                running_var=running_var,
-                training=training
-            )
+            # Apply activation function
+            a = activation_func(z)
 
-        # Apply activation function
-        a = activation_func(z)
-
-    # Return the final prediction
-    return a
+        # Return the final prediction
+        return a
 
 
     def _create_gradient_func(self):
