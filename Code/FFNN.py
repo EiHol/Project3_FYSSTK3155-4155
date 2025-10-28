@@ -53,6 +53,27 @@ class NeuralNetwork:
         # Return the list of weights and biases for each layer
         return layers
 
+    def batch_norm_forward(self, z, gamma, beta, eps=1e-5, momentum=0.9, training=True, running_mean=None, running_var=None):
+        # Uses all mini-batches and current mean and variance
+        if training:
+            batch_mean = np.mean(z, axis=0, keepdims=True)
+            batch_var = np.var(z, axis=0, keepdims=True)
+            z_norm = (z - batch_mean) / np.sqrt(batch_var + eps)
+            out = gamma * z_norm + beta
+
+            # Update running statistics
+            if running_mean is not None:
+                running_mean[:] = momentum * running_mean + (1 - momentum) * batch_mean
+                running_var[:] = momentum * running_var + (1 - momentum) * batch_var
+
+        # Uses running average
+        else:
+            # Use running statistics for inference
+            z_norm = (z - running_mean) / np.sqrt(running_var + eps)
+            out = gamma * z_norm + beta
+
+        return out
+
 
     def predict(self, inputs):
         """Performs forward propagation through the network to compute predictions"""
