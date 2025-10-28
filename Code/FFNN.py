@@ -23,7 +23,7 @@ class NeuralNetwork:
         self.moving_avg = None
 
     
-    def _create_layers(self):
+    def _create_layers(self, batch_norm = True):
         """Creates layers for the neural network based on initial network input size and layer output sizes"""
 
         # Empty list to store layers
@@ -42,9 +42,38 @@ class NeuralNetwork:
 
             # Update input size for next layer
             i_size = layer_output_size
-            
+
+            if batch_norm:
+                gamma = np.ones((1, layer_output_size))
+                beta = np.zeros((1, layer_output_size))
+                running_mean = np.zeros((1, layer_output_size))
+                running_var = np.ones((1, layer_output_size))
+                layer.update({'gamma': gamma, 'beta': beta,'running_mean': running_mean,'running_var': running_var,})
+                
         # Return the list of weights and biases for each layer
         return layers
+
+    def batch_norm_forward(self, z, gamma, beta, epsilon=1e-5, momentum=0.9, training=True, running_mean=None, running_var=None):
+        # Uses all mini-batches and current mean and variance
+        if training:
+            batch_mean = np.mean(z, axis=0, keepdims=True)
+            batch_var = np.var(z, axis=0, keepdims=True)
+            # Eps is to avoid dividing ny zero
+            z_norm = (z - batch_mean) / np.sqrt(batch_var + epsilon)
+            out = gamma * z_norm + beta
+
+            # Update running statistics
+            if running_mean is not None:
+                running_mean[:] = momentum * running_mean + (1 - momentum) * batch_mean
+                running_var[:] = momentum * running_var + (1 - momentum) * batch_var
+
+        # Uses running average
+        else:
+            # Use running statistics for inference
+            z_norm = (z - running_mean) / np.sqrt(running_var + epsilon)
+            out = gamma * z_norm + beta
+
+        return out
 
 
     def predict(self, inputs):
@@ -57,9 +86,12 @@ class NeuralNetwork:
         for (W, b), activation_func in zip(self.layers, self.activation_funcs):
             # Compute weighted sum
             z = a @ W + b
+            
+            # Apply Batch Normalization if present
+            if 'gamma' in layer:
+                z = self.batch_norm_forward(z, layer['gamma'], layer['beta'], running_mean=layer['running_mean'], running_var=layer['running_var'],training=training)
             # Apply activation function
             a = activation_func(z)
-
         # Return the final prediction
         return a
 
