@@ -48,7 +48,7 @@ class NeuralNetwork:
                 beta = np.zeros((1, layer_output_size))
                 running_mean = np.zeros((1, layer_output_size))
                 running_var = np.ones((1, layer_output_size))
-                layer.update({'gamma': gamma, 'beta': beta,'running_mean': running_mean,'running_var': running_var,})
+                layer = (W, b, gamma, beta, running_mean, running_var)
                 
         # Return the list of weights and biases for each layer
         return layers
@@ -78,21 +78,33 @@ class NeuralNetwork:
 
     def predict(self, inputs):
         """Performs forward propagation through the network to compute predictions"""
-
         # Set a equal to the initial input value
         a = inputs
 
         # Iterate through layers and their respective activation functions to compute the prediction a
-        for (W, b), activation_func in zip(self.layers, self.activation_funcs):
-            # Compute weighted sum
-            z = a @ W + b
-            
-            layer = {}
-            # Apply Batch Normalization if present
-            if 'gamma' in layer:
-                z = self.batch_norm_forward(z, layer['gamma'], layer['beta'], running_mean=layer['running_mean'], running_var=layer['running_var'],training=training)
+        for layer, activation_func in zip(self.layers, self.activation_funcs):
+            # If we only have W and b as parameters, we compute z using only W and b
+            if len(layer) == 2:
+                # Layer without batch normalization
+                W, b = layer
+                z = a @ W + b
+            # Else we have batch normalization
+            else:
+                # Layer with batch normalization parameters
+                W, b, gamma, beta, running_mean, running_var = layer
+                z = a @ W + b
+
+                # Apply Batch Normalization if present
+                z = self.batch_norm_forward(z,gamma,
+                    beta,
+                    running_mean=running_mean,
+                    running_var=running_var,
+                    training=training
+                )
+
             # Apply activation function
             a = activation_func(z)
+
         # Return the final prediction
         return a
 
