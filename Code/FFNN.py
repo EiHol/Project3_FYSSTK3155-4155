@@ -23,7 +23,7 @@ class NeuralNetwork:
         self.moving_avg = None
 
     
-    def _create_layers(self):
+    def _create_layers(self, batch_norm = True):
         """Creates layers for the neural network based on initial network input size and layer output sizes"""
 
         # Empty list to store layers
@@ -42,7 +42,14 @@ class NeuralNetwork:
 
             # Update input size for next layer
             i_size = layer_output_size
-            
+
+            if batch_norm:
+                gamma = np.ones((1, layer_output_size))
+                beta = np.zeros((1, layer_output_size))
+                running_mean = np.zeros((1, layer_output_size))
+                running_var = np.ones((1, layer_output_size))
+                layer.update({'gamma': gamma, 'beta': beta,'running_mean': running_mean,'running_var': running_var,})
+                
         # Return the list of weights and biases for each layer
         return layers
 
@@ -57,9 +64,12 @@ class NeuralNetwork:
         for (W, b), activation_func in zip(self.layers, self.activation_funcs):
             # Compute weighted sum
             z = a @ W + b
+            
+            # Apply Batch Normalization if present
+            if 'gamma' in layer:
+                z = self.batch_norm_forward(z, layer['gamma'], layer['beta'], running_mean=layer['running_mean'], running_var=layer['running_var'],training=training)
             # Apply activation function
             a = activation_func(z)
-
         # Return the final prediction
         return a
 
