@@ -87,6 +87,7 @@ class NeuralNetwork:
             # Compute weighted sum
             z = a @ W + b
             
+            layer = {}
             # Apply Batch Normalization if present
             if 'gamma' in layer:
                 z = self.batch_norm_forward(z, layer['gamma'], layer['beta'], running_mean=layer['running_mean'], running_var=layer['running_var'],training=training)
