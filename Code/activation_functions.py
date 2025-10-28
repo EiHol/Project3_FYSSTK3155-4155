@@ -52,6 +52,10 @@ def mse(y_true, y_pred, weights=None, l1_lambda=0, l2_lambda=0):
     return mse + l1_penalty + l2_penalty
 
 
+# Used for output layer for regression
+def identity(x):
+    return x
+
 # Derivative of  Mean Squared Error with optional L1 and L2 regularization
 def mse_der(y_true, y_pred, weights=None, l1_lambda=0.0, l2_lambda=0.0):
     # Derivative w.r.t predictions, where a = y_pred
