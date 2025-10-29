@@ -4,6 +4,7 @@ This file contains an implementation of a feed forward neural network
 
 import autograd.numpy as np
 from autograd import grad
+from sklearn.metrics import accuracy_score
 
 class NeuralNetwork:
     def __init__(
@@ -350,3 +351,10 @@ def train_network_stocastic_ADAM(neural_network, inputs, targets, eta=0.01, beta
             # Update weights using gradient descent
             neural_network.update_params_ADAM(layers_grad, eta, beta1, beta2)
     
+
+def accuracy(predictions, targets):
+    one_hot_predictions = np.zeros(predictions.shape)
+
+    for i, prediction in enumerate(predictions):
+        one_hot_predictions[i, np.argmax(prediction)] = 1
+    return accuracy_score(one_hot_predictions, targets)
