@@ -289,7 +289,7 @@ def train_network_momentum(neural_network, inputs, targets, eta=0.01, alpha=0.9,
         neural_network.update_params_momentum(layers_grad, eta, alpha)
 
 
-def train_network_stochastic_momentum(neural_network, inputs, targets, eta=0.01, alpha=0.9, epochs=100, batch_size=25):
+def train_network_stocastic_momentum(neural_network, inputs, targets, eta=0.01, alpha=0.9, epochs=100, batch_size=25):
     """Trains the neural network using stochastic gradient descent with momentum"""
     # Iterate through epochs
     for i in range(epochs):
