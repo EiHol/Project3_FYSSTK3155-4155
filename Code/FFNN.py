@@ -4,6 +4,7 @@ This file contains an implementation of a feed forward neural network
 
 import autograd.numpy as np
 from autograd import grad
+from sklearn.metrics import accuracy_score
 
 class NeuralNetwork:
     def __init__(
@@ -23,7 +24,7 @@ class NeuralNetwork:
         self.moving_avg = None
 
     
-    def _create_layers(self):
+    def _create_layers(self, batch_norm = True):
         """Creates layers for the neural network based on initial network input size and layer output sizes"""
 
         # Empty list to store layers
@@ -42,21 +43,66 @@ class NeuralNetwork:
 
             # Update input size for next layer
             i_size = layer_output_size
-            
+
+            if batch_norm:
+                gamma = np.ones((1, layer_output_size))
+                beta = np.zeros((1, layer_output_size))
+                running_mean = np.zeros((1, layer_output_size))
+                running_var = np.ones((1, layer_output_size))
+                layer = (W, b, gamma, beta, running_mean, running_var)
+                
         # Return the list of weights and biases for each layer
         return layers
+
+    def batch_norm_forward(self, z, gamma, beta, epsilon=1e-5, momentum=0.9, training=True, running_mean=None, running_var=None):
+        # Uses all mini-batches and current mean and variance
+        if training:
+            batch_mean = np.mean(z, axis=0, keepdims=True)
+            batch_var = np.var(z, axis=0, keepdims=True)
+            # Eps is to avoid dividing ny zero
+            z_norm = (z - batch_mean) / np.sqrt(batch_var + epsilon)
+            out = gamma * z_norm + beta
+
+            # Update running statistics
+            if running_mean is not None:
+                running_mean[:] = momentum * running_mean + (1 - momentum) * batch_mean
+                running_var[:] = momentum * running_var + (1 - momentum) * batch_var
+
+        # Uses running average
+        else:
+            # Use running statistics for inference
+            z_norm = (z - running_mean) / np.sqrt(running_var + epsilon)
+            out = gamma * z_norm + beta
+
+        return out
 
 
     def predict(self, inputs):
         """Performs forward propagation through the network to compute predictions"""
-
         # Set a equal to the initial input value
         a = inputs
 
         # Iterate through layers and their respective activation functions to compute the prediction a
-        for (W, b), activation_func in zip(self.layers, self.activation_funcs):
-            # Compute weighted sum
-            z = a @ W + b
+        for layer, activation_func in zip(self.layers, self.activation_funcs):
+            # If we only have W and b as parameters, we compute z using only W and b
+            if len(layer) == 2:
+                # Layer without batch normalization
+                W, b = layer
+                z = a @ W + b
+            # Else we have batch normalization
+            else:
+                # Layer with batch normalization parameters
+                W, b, gamma, beta, running_mean, running_var = layer
+                z = a @ W + b
+
+                # Apply Batch Normalization if present
+                z = self.batch_norm_forward(z,gamma,
+                    beta,
+                    running_mean=running_mean,
+                    running_var=running_var,
+                    training=training
+                )
+
             # Apply activation function
             a = activation_func(z)
 
@@ -243,7 +289,7 @@ def train_network_momentum(neural_network, inputs, targets, eta=0.01, alpha=0.9,
         neural_network.update_params_momentum(layers_grad, eta, alpha)
 
 
-def train_network_stochastic_momentum(neural_network, inputs, targets, eta=0.01, alpha=0.9, epochs=100, batch_size=25):
+def train_network_stocastic_momentum(neural_network, inputs, targets, eta=0.01, alpha=0.9, epochs=100, batch_size=25):
     """Trains the neural network using stochastic gradient descent with momentum"""
     # Iterate through epochs
     for i in range(epochs):
@@ -305,3 +351,10 @@ def train_network_stocastic_ADAM(neural_network, inputs, targets, eta=0.01, beta
             # Update weights using gradient descent
             neural_network.update_params_ADAM(layers_grad, eta, beta1, beta2)
     
+
+def accuracy(predictions, targets):
+    one_hot_predictions = np.zeros(predictions.shape)
+
+    for i, prediction in enumerate(predictions):
+        one_hot_predictions[i, np.argmax(prediction)] = 1
+    return accuracy_score(one_hot_predictions, targets)

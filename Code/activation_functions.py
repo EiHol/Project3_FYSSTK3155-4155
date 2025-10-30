@@ -14,7 +14,7 @@ def ReLU_der(z):
     return np.where(z > 0, 1, 0)
 
 # Leaky ReLU function?
-def leaky_ReLU(z, a):
+def leaky_ReLU(z, a = 0.1):
     return np.where(z > 0, z, z * a)
 
 # Derivative of the leaky ReLU function?
@@ -36,3 +36,9 @@ def sigmoid_der(z):
 def softmax(z):
     e_z = np.exp(z - np.max(z, axis=0))
     return e_z / np.sum(e_z, axis=1)[:, np.newaxis]
+
+# Used for output layer for regression
+def identity(x):
+    return x
+
+
