@@ -33,17 +33,23 @@ def mse_der(y_true, y_pred, weights=None, l1_lambda=0.0, l2_lambda=0.0):
 
     return dC_da, dC_dw
 
-# Binary cross entropy
-def binary_cross_entropy():
-    pass
-
 # Binary cross entropy with L1 norm
-def BCE_L1():
-    pass
+def cross_entropy_L1(predict, target, weights, lmbda=0.01):
+    
+    l1_penalty = 0.0
+    for W in weights:
+        l1_penalty += np.sum(np.abs(W))
+    
+    return cross_entropy(predict, target) + lmbda * l1_penalty
 
 # Binary cross entropy with L2 norm
-def BCE_L2():
-    pass
+def cross_entropy_L2(predict, target, weights, lmbda=0.01):
+    
+    l2_penalty = 0.0
+    for W in weights:
+        l2_penalty += np.sum(W**2)
+    
+    return cross_entropy(predict, target) + lmbda * l2_penalty
 
 # Cross entropy function
 def cross_entropy(predict, target):
