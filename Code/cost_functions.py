@@ -52,7 +52,3 @@ def cross_entropy(predict, target):
 # Softmax cross entropy derivative
 def cross_entropy_der(predict, target):
     return predict - target
-
-# Multiclass cross entropy function
-def multi_cross_entropy(predict, target):
-    pass
