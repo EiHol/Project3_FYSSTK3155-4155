@@ -13,6 +13,7 @@ class NeuralNetwork:
         layer_output_sizes,
         activation_funcs,
         cost_func,
+        lmbda=0.0
     ):
         self.network_input_size = network_input_size
         self.layer_output_sizes = layer_output_sizes
