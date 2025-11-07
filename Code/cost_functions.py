@@ -8,7 +8,7 @@ import autograd.numpy as np
 # Mean Squared Error with optional L1 and L2 regularization
 def mse(y_true, y_pred, weights=None, l1_lambda=0, l2_lambda=0):
     # Mean squared error
-    mse = np.mean((y_true - y_pred) ** 2)
+    MSE = np.mean((y_true - y_pred) ** 2)
 
     # Regularization terms
     l1_penalty = 0
@@ -17,7 +17,7 @@ def mse(y_true, y_pred, weights=None, l1_lambda=0, l2_lambda=0):
         l1_term = l1_lambda * np.sum(np.abs(weights))
         l2_term = l2_lambda * np.sum(weights ** 2)
 
-    return mse + l1_penalty + l2_penalty
+    return MSE + l1_penalty + l2_penalty
 
 
 # Derivative of  Mean Squared Error with optional L1 and L2 regularization
@@ -34,27 +34,27 @@ def mse_der(y_true, y_pred, weights=None, l1_lambda=0.0, l2_lambda=0.0):
     return dC_da, dC_dw
 
 # Cross entropy function
-def cross_entropy(predict, target):
-    return -np.sum(target * np.log(predict))
+def binary_cross_entropy(predict, target, weights=None, L1_lambda=0, L2_lambda=0):
+    BCE = -np.mean(target * np.log(predict) + (1 - target) * np.log(1 - predict))
 
-# Binary cross entropy with L1 norm
-def cross_entropy_L1(predict, target, weights, lmbda=0.01):
-    
-    l1_penalty = 0.0
-    for W in weights:
-        l1_penalty += np.sum(np.abs(W))
-    
-    return cross_entropy(predict, target) + lmbda * l1_penalty
+    # Regularization terms
+    l1_penalty = 0
+    l2_penalty = 0
+    if weights is not None:
+        l1_penalty = L1_lambda * np.sum(np.abs(weights))
+        l2_penalty = L2_lambda * np.sum(weights ** 2)
 
-# Binary cross entropy with L2 norm
-def cross_entropy_L2(predict, target, weights, lmbda=0.01):
-    
-    l2_penalty = 0.0
-    for W in weights:
-        l2_penalty += np.sum(W**2)
-    
-    return cross_entropy(predict, target) + lmbda * l2_penalty
+    return BCE + l1_penalty + l2_penalty
 
-# Softmax cross entropy derivative
-def cross_entropy_der(predict, target):
-    return predict - target
+# Cross entropy function
+def cross_entropy(predict, target, weights=None, L1_lambda=0, L2_lambda=0):
+    CE = -np.sum(target * np.log(predict))
+
+    # Regularization terms
+    l1_penalty = 0
+    l2_penalty = 0
+    if weights is not None:
+        l1_penalty = L1_lambda * np.sum(np.abs(weights))
+        l2_penalty = L2_lambda * np.sum(weights ** 2)
+
+    return CE + l1_penalty + l2_penalty
