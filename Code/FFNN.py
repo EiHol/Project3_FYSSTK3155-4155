@@ -354,6 +354,7 @@ def train_network_stocastic_ADAM(neural_network, inputs, targets, eta=0.01, beta
     
 
 def accuracy(predictions, targets):
+    """Computes accuracy based on the true targets and predicted values"""
     one_hot_predictions = np.zeros(predictions.shape)
 
     for i, prediction in enumerate(predictions):
