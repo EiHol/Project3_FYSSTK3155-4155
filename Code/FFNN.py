@@ -353,10 +353,24 @@ def train_network_stocastic_ADAM(neural_network, inputs, targets, eta=0.01, beta
             neural_network.update_params_ADAM(layers_grad, eta, beta1, beta2)
     
 
+# Convert to one-hot encoding
+def to_one_hot(y, num_classes=10):
+    """Convert integer labels to one-hot encoding"""
+    n_samples = y.shape[0]
+    one_hot = np.zeros((n_samples, num_classes))
+    one_hot[np.arange(n_samples), y] = 1
+    return one_hot
+
 def accuracy(predictions, targets):
     """Computes accuracy based on the true targets and predicted values"""
-    one_hot_predictions = np.zeros(predictions.shape)
-
-    for i, prediction in enumerate(predictions):
-        one_hot_predictions[i, np.argmax(prediction)] = 1
-    return accuracy_score(one_hot_predictions, targets)
+    # Get predicted class labels
+    pred_labels = np.argmax(predictions, axis=1)
+    
+    # Get target class labels
+    if targets.ndim == 2 and targets.shape[1] > 1:
+        target_labels = np.argmax(targets, axis=1)
+    else:
+        target_labels = targets
+    
+    # Compare labels directly
+    return np.mean(pred_labels == target_labels)
