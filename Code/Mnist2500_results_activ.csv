@@ -1,0 +1,4 @@
+n_hidden,layer_size,eta,activation,n_epochs,optimizer,train_acc,val_acc,test_acc,train_acc_std,val_acc_std,test_acc_std
+1,1000,0.01,sigmoid,100,train_network_SRMSprop,0.9945333333333334,0.9124000000000001,0.9086000000000001,0.003587633079219655,0.010071742649611347,0.011208925015361653
+1,1000,0.01,ReLU,100,train_network_SRMSprop,0.096,0.09,0.09,0.0,0.0,0.0
+1,1000,0.01,leaky_ReLU,100,train_network_SRMSprop,0.096,0.09,0.09,0.0,0.0,0.0
