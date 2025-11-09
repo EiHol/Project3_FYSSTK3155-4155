@@ -13,7 +13,8 @@ class NeuralNetwork:
         layer_output_sizes,
         activation_funcs,
         cost_func,
-        lmbda=0.0
+        l1_lambda=0.0,
+        l2_lambda=0.0
     ):
         self.network_input_size = network_input_size
         self.layer_output_sizes = layer_output_sizes
@@ -23,6 +24,8 @@ class NeuralNetwork:
         self.gradient_func = self._create_gradient_func()
         self.velocities = None
         self.moving_avg = None
+        self.l1_lambda = l1_lambda
+        self.l2_lambda = l2_lambda
 
     
     def _create_layers(self, batch_norm = True):
@@ -114,6 +117,7 @@ class NeuralNetwork:
     def _create_gradient_func(self):
         """Creates gradient function using autograd for automatic differentiation"""
         from autograd import grad
+        import inspect
         
         def cost(layers, inputs, targets):
             # Forward pass through network
@@ -121,8 +125,13 @@ class NeuralNetwork:
             for (W, b), activation_func in zip(layers, self.activation_funcs):
                 z = a @ W + b
                 a = activation_func(z)
-            # Return cost function value
-            return self.cost_func(a, targets)
+            
+            # Collect all weights for regularization
+            all_weights = np.concatenate([W.flatten() for W, b in layers])
+            
+            # Return cost function value with regularization
+            return self.cost_func(a, targets, weights=all_weights, 
+                                L1_lambda=self.l1_lambda, L2_lambda=self.l2_lambda)
         
         # Create gradient function with respect to layers
         gradient_func = grad(cost, 0)
