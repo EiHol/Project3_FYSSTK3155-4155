@@ -15,4 +15,4 @@ The  *FFNN.py* file contains the basis of our feed-forward neural network implem
 
 The *activation_functions.py* and *cost_functions.py* files contain all activation and cost functions used in the project, including some of their derivatives.
 
-Lastly, all variants of *FFNN_..._testing.ipynb* jupyter nodebooks contain our testing and use of the previously mentioned implementations. Separate notebooks are found for general FFNN testing, regression problem testing and classification testing, as well as a final classification analysis using the full MNIST dataset.
+Lastly, all variants of *FFNN_..._testing.ipynb* jupyter nodebooks contain our testing and use of the previously mentioned implementations. Separate notebooks are found for general FFNN testing, regression problem testing and classification testing, as well as a final classification analysis using the full MNIST and fashion-MNIST datasets.
