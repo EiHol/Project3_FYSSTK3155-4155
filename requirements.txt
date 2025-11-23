@@ -54,7 +54,6 @@ jupyterlab_widgets==3.0.15
 kiwisolver==1.4.9
 lark==1.2.2
 MarkupSafe==3.0.2
-matplotlib==3.10.5
 matplotlib-inline==0.1.7
 mistune==3.1.4
 nbclient==0.10.2
@@ -113,3 +112,6 @@ webencodings==0.5.1
 websocket-client==1.8.0
 widgetsnbextension==4.0.14
 torch=2.9.1
+torchvision=0.24.1
+matplotlib=3.10.7
+kagglehub=0.3.13
