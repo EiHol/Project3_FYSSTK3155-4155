@@ -115,3 +115,4 @@ torch==2.9.1
 torchvision==0.24.1
 matplotlib==3.10.7
 kagglehub==0.3.13
+opencv-python==4.1
