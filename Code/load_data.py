@@ -124,8 +124,10 @@ def load_and_transform_data(SEED):
     return X_train, y_train, X_val, y_val, X_test, y_test
 
 
-def load_and_transform_data_varDim(SEED):
 
+
+def load_and_transform_data_varDim(SEED):
+    """Loads and preprocesses the data. Reducing image sizes larger than 480x480 to maximum that size, keeping the aspect ration intact and padding the rest"""
     seed_everything(SEED)
 
     # Copy to current directory
@@ -185,9 +187,25 @@ def load_and_transform_data_varDim(SEED):
         print(f"Dataset already exists at: {new_dataset_path}\n")
 
 
-    # Define the transforms to do for training data
+    # Define transforms with max dimension constraint
+    max_dim = 480
+
+    def resize_preserve_aspect(img, max_dim=max_dim):
+        """Resize image so largest dimension = max_dim, preserve aspect ratio"""
+        w, h = img.size
+        if max(w, h) > max_dim:
+            if w > h:
+                new_w = max_dim
+                new_h = int(h * max_dim / w)
+            else:
+                new_h = max_dim
+                new_w = int(w * max_dim / h)
+            img = img.resize((new_w, new_h), Image.LANCZOS)
+        return img
+
     train_transform = transforms.Compose([
         transforms.Grayscale(num_output_channels=1),
+        transforms.Lambda(lambda img: resize_preserve_aspect(img, max_dim)),
         transforms.RandomHorizontalFlip(p=0.5),
         transforms.RandomRotation(20),
         transforms.ColorJitter(brightness=0.3),
@@ -195,14 +213,14 @@ def load_and_transform_data_varDim(SEED):
         transforms.Normalize(mean=[0.5], std=[0.5])
     ])
 
-    # Define the transforms to do for validation and testing data
     val_test_transform = transforms.Compose([
         transforms.Grayscale(num_output_channels=1),
+        transforms.Lambda(lambda img: resize_preserve_aspect(img, max_dim)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5], std=[0.5])
     ])
 
-    # Load datasets with progress bar
+    # Load with padding
     def load_data(path, train_aug=True):
         transform = train_transform if train_aug else val_test_transform
         dataset = datasets.ImageFolder(path, transform=transform)
@@ -211,7 +229,14 @@ def load_and_transform_data_varDim(SEED):
         labels = []
         for i in tqdm(range(len(dataset)), desc=f"Loading {path.split('/')[-1]}"):
             img, label = dataset[i]
-            images.append(img.numpy().squeeze())
+            img_np = img.numpy().squeeze()
+            h, w = img_np.shape
+            
+            # Pad to max_dim x max_dim
+            padded = np.zeros((max_dim, max_dim))
+            padded[:h, :w] = img_np
+            
+            images.append(padded)
             labels.append(label)
         
         return np.array(images), np.array(labels)
