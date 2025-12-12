@@ -81,28 +81,8 @@ def load_and_transform_data(SEED):
     else:
         print(f"Dataset already exists at: {new_dataset_path}\n")
 
-    # Calculate mean and std from training set
-    temp_transform = transforms.Compose([
-        transforms.Grayscale(num_output_channels=1),
-        transforms.Resize((480, 480)),
-        transforms.ToTensor()
-    ])
-    
-    temp_dataset = datasets.ImageFolder(root='chest_xray_data_split/train', 
-                                        transform=temp_transform)
-    
-    # Compute statistics
-    mean = 0.0
-    std = 0.0
-    for i in tqdm(range(len(temp_dataset)), desc="Computing statistics"):
-        img, _ = temp_dataset[i]
-        mean += img.mean()
-        std += img.std()
-    
-    mean /= len(temp_dataset)
-    std /= len(temp_dataset)
-    
-    print(f"Computed Mean: {mean:.4f}, Std: {std:.4f}")
+    mean = 0.5
+    std = 0.5
 
     # Define the transforms to do for training data
     train_transform = transforms.Compose([
@@ -112,7 +92,7 @@ def load_and_transform_data(SEED):
         transforms.RandomRotation(10),
         transforms.ColorJitter(brightness=0.3),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[mean], std=[std])  # Use computed values
+        transforms.Normalize(mean=[mean], std=[std])
     ])
 
     # Define the transforms to do for validation and testing data
@@ -120,7 +100,7 @@ def load_and_transform_data(SEED):
         transforms.Grayscale(num_output_channels=1),
         transforms.Resize((480, 480)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[mean], std=[std])  # Use computed values
+        transforms.Normalize(mean=[mean], std=[std])
     ])
 
     # Load datasets with progress bar
