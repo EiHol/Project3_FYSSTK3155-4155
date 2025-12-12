@@ -81,16 +81,38 @@ def load_and_transform_data(SEED):
     else:
         print(f"Dataset already exists at: {new_dataset_path}\n")
 
+    # Calculate mean and std from training set
+    temp_transform = transforms.Compose([
+        transforms.Grayscale(num_output_channels=1),
+        transforms.Resize((480, 480)),
+        transforms.ToTensor()
+    ])
+    
+    temp_dataset = datasets.ImageFolder(root='chest_xray_data_split/train', 
+                                        transform=temp_transform)
+    
+    # Compute statistics
+    mean = 0.0
+    std = 0.0
+    for i in tqdm(range(len(temp_dataset)), desc="Computing statistics"):
+        img, _ = temp_dataset[i]
+        mean += img.mean()
+        std += img.std()
+    
+    mean /= len(temp_dataset)
+    std /= len(temp_dataset)
+    
+    print(f"Computed Mean: {mean:.4f}, Std: {std:.4f}")
 
     # Define the transforms to do for training data
     train_transform = transforms.Compose([
         transforms.Grayscale(num_output_channels=1),
         transforms.Resize((480, 480)),
         transforms.RandomHorizontalFlip(p=0.5),
-        transforms.RandomRotation(20),
+        transforms.RandomRotation(10),
         transforms.ColorJitter(brightness=0.3),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5], std=[0.5])
+        transforms.Normalize(mean=[mean], std=[std])  # Use computed values
     ])
 
     # Define the transforms to do for validation and testing data
@@ -98,7 +120,7 @@ def load_and_transform_data(SEED):
         transforms.Grayscale(num_output_channels=1),
         transforms.Resize((480, 480)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5], std=[0.5])
+        transforms.Normalize(mean=[mean], std=[std])  # Use computed values
     ])
 
     # Load datasets with progress bar
@@ -111,132 +133,6 @@ def load_and_transform_data(SEED):
         for i in tqdm(range(len(dataset)), desc=f"Loading {path.split('/')[-1]}"):
             img, label = dataset[i]
             images.append(img.numpy().squeeze())
-            labels.append(label)
-        
-        return np.array(images), np.array(labels)
-
-    X_train, y_train = load_data('chest_xray_data_split/train', train_aug=True)
-    X_val, y_val = load_data('chest_xray_data_split/val', train_aug=False)
-    X_test, y_test = load_data('chest_xray_data_split/test', train_aug=False)
-
-    print(f"Train: {X_train.shape}, Val: {X_val.shape}, Test: {X_test.shape}")
-
-    return X_train, y_train, X_val, y_val, X_test, y_test
-
-
-
-
-def load_and_transform_data_varDim(SEED):
-    """Loads and preprocesses the data. Reducing image sizes larger than 480x480 to maximum that size, keeping the aspect ration intact and padding the rest"""
-    seed_everything(SEED)
-
-    # Copy to current directory
-    target_dir = "chest_xray_data"
-
-    if not os.path.exists(target_dir):
-
-        # Download the dataset
-        path = kagglehub.dataset_download("paultimothymooney/chest-xray-pneumonia")
-
-        print("Downloaded to cache:", path)
-
-        shutil.copytree(path, target_dir)
-        print(f"Dataset copied to: {target_dir}")
-        
-    else:
-        print(f"Dataset already exists at: {target_dir}")
-
-    print("\nDataset ready at:", os.path.abspath(target_dir))
-
-    dataset_path = 'chest_xray_data/chest_xray'
-    new_dataset_path = 'chest_xray_data_split'
-
-    if not os.path.exists(new_dataset_path):
-        for split in ['train', 'val', 'test']:
-            for cls in ['NORMAL', 'PNEUMONIA']:
-                os.makedirs(f'{new_dataset_path}/{split}/{cls}', exist_ok=True)
-
-        for cls in ['NORMAL', 'PNEUMONIA']:
-            all_files = []
-            for split in ['train', 'val', 'test']:
-                source_folder = f'{dataset_path}/{split}/{cls}'
-                files = os.listdir(source_folder)
-                all_files.extend([(file, source_folder) for file in files])
-
-            random.shuffle(all_files)
-
-            train_files = all_files[:int(len(all_files)*0.8)]
-            val_files = all_files[int(len(all_files)*0.8):int(len(all_files)*0.9)]
-            test_files = all_files[int(len(all_files)*0.9):]
-
-            for file, source_folder in train_files:
-                dest = f'{new_dataset_path}/train/{cls}/{file}'
-                shutil.copy(f'{source_folder}/{file}', dest)
-
-            for file, source_folder in val_files:
-                dest = f'{new_dataset_path}/val/{cls}/{file}'
-                shutil.copy(f'{source_folder}/{file}', dest)
-
-            for file, source_folder in test_files:
-                dest = f'{new_dataset_path}/test/{cls}/{file}'
-                shutil.copy(f'{source_folder}/{file}', dest)  
-
-        print("\nDataset ready at:", os.path.abspath(new_dataset_path))
-    
-    else:
-        print(f"Dataset already exists at: {new_dataset_path}\n")
-
-
-    # Define transforms with max dimension constraint
-    max_dim = 480
-
-    def resize_preserve_aspect(img, max_dim=max_dim):
-        """Resize image so largest dimension = max_dim, preserve aspect ratio"""
-        w, h = img.size
-        if max(w, h) > max_dim:
-            if w > h:
-                new_w = max_dim
-                new_h = int(h * max_dim / w)
-            else:
-                new_h = max_dim
-                new_w = int(w * max_dim / h)
-            img = img.resize((new_w, new_h), Image.LANCZOS)
-        return img
-
-    train_transform = transforms.Compose([
-        transforms.Grayscale(num_output_channels=1),
-        transforms.Lambda(lambda img: resize_preserve_aspect(img, max_dim)),
-        transforms.RandomHorizontalFlip(p=0.5),
-        transforms.RandomRotation(20),
-        transforms.ColorJitter(brightness=0.3),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5], std=[0.5])
-    ])
-
-    val_test_transform = transforms.Compose([
-        transforms.Grayscale(num_output_channels=1),
-        transforms.Lambda(lambda img: resize_preserve_aspect(img, max_dim)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5], std=[0.5])
-    ])
-
-    # Load with padding
-    def load_data(path, train_aug=True):
-        transform = train_transform if train_aug else val_test_transform
-        dataset = datasets.ImageFolder(path, transform=transform)
-        
-        images = []
-        labels = []
-        for i in tqdm(range(len(dataset)), desc=f"Loading {path.split('/')[-1]}"):
-            img, label = dataset[i]
-            img_np = img.numpy().squeeze()
-            h, w = img_np.shape
-            
-            # Pad to max_dim x max_dim
-            padded = np.zeros((max_dim, max_dim))
-            padded[:h, :w] = img_np
-            
-            images.append(padded)
             labels.append(label)
         
         return np.array(images), np.array(labels)

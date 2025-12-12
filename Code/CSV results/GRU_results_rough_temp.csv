@@ -1,0 +1,2 @@
+n-Layers,Layer-Config,n-Units,Dropout,n-Epochs,Val Accuracy,Val Loss,Test Accuracy,Test Loss
+1,SimpleRNN,15,0.0,10,0.7333333492279053,0.5909736752510071,0.7342419028282166,0.5899176001548767
